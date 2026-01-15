@@ -37,6 +37,7 @@ static void draw_top(lv_obj_t *widget, lv_color_t cbuf[], const struct status_st
 
     // Draw widgets
     draw_output_status(canvas, state);
+    draw_battery_status(canvas, state);
 
     // Rotate for horizontal display
     rotate_canvas(canvas, cbuf);
@@ -47,7 +48,7 @@ static void draw_middle(lv_obj_t *widget, lv_color_t cbuf[], const struct status
     fill_background(canvas);
 
     // Draw widgets
-    draw_battery_status(canvas, state);
+    draw_wpm_status(canvas, state);
 
     // Rotate for horizontal display
     rotate_canvas(canvas, cbuf);
@@ -59,7 +60,6 @@ static void draw_bottom(lv_obj_t *widget, lv_color_t cbuf[], const struct status
 
     // Draw widgets
     draw_profile_status(canvas, state);
-    draw_wpm_status(canvas, state);
 
     // Rotate for horizontal display
     rotate_canvas(canvas, cbuf);
@@ -75,7 +75,7 @@ static void set_battery_status(struct zmk_widget_screen *widget, struct battery_
     if (state.source > CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS) return;
     widget->state.batteries[state.source].level = state.level;
     widget->state.batteries[state.source].usb_present = state.usb_present;
-    draw_middle(widget->obj, widget->cbuf2, &widget->state);
+    draw_top(widget->obj, widget->cbuf, &widget->state);
 }
 
 static struct battery_info peripheral_battery_status_get_state(const zmk_event_t *eh) {
@@ -129,7 +129,7 @@ static void set_battery_status(struct zmk_widget_screen *widget,
 #endif /* IS_ENABLED(CONFIG_USB_DEVICE_STACK) */
     widget->state.battery = state.level;
 
-    draw_middle(widget->obj, widget->cbuf2, &widget->state);
+    draw_top(widget->obj, widget->cbuf, &widget->state);
 }
 
 static void battery_status_update_cb(struct battery_status_state state) {
@@ -208,7 +208,7 @@ static void set_wpm_status(struct zmk_widget_screen *widget, struct wpm_status_s
     }
     widget->state.wpm[9] = state.wpm;
 
-    draw_bottom(widget->obj, widget->cbuf3, &widget->state);
+    draw_middle(widget->obj, widget->cbuf2, &widget->state);
 }
 
 static void wpm_status_update_cb(struct wpm_status_state state) {
