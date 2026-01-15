@@ -1,0 +1,8 @@
+file_format: "1"
+id: nice_peri_view
+name: nice!peri!view
+type: shield
+url: https://github.com/tobiasarndt/Kuniboard
+requires: [nice_view_header]
+features:
+  - display
