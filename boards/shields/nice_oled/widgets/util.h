@@ -53,6 +53,7 @@ struct status_state {
     char media_player[11];
 #endif
 #endif
+    uint8_t hid_indicators;
 #if IS_ENABLED(CONFIG_NICE_OLED_WIDGET_MODIFIERS_INDICATORS_FIXED)
     uint8_t mod_state;
 #endif

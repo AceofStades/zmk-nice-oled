@@ -14,6 +14,7 @@ LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 #include <zmk/events/layer_state_changed.h>
 #include <zmk/events/usb_conn_state_changed.h>
 #include <zmk/events/wpm_state_changed.h>
+#include <zmk/events/hid_indicators_changed.h>
 #include <zmk/keymap.h>
 #include <zmk/usb.h>
 #include <zmk/wpm.h>
@@ -75,19 +76,11 @@ static void draw_battery_text(lv_obj_t *canvas, const struct status_state *state
     //  Lógica Parcelada
 #if IS_ENABLED(CONFIG_NICE_OLED_WIDGET_CENTRAL_SHOW_BATTERY_PERIPHERAL_ALL)
     // MODO 1: Muestra TODAS las baterías (Central + Periféricos) en una sola linea
-    char *p = text;
-    char *end = text + sizeof(text);
-    for (int i = 0; i < CONFIG_NICE_OLED_SPLIT_TOTAL_DEVICES; i++) {
-        // Añade el nivel de la batería y un espacio, controlando el tamaño del buffer
-        int written = snprintf(p, end - p, "%d ", state->batteries[i].level);
-        if (written > 0) {
-            p += written;
-        }
-    }
-    // Elimina el último espacio si se escribió algo
-    if (p > text) {
-        *(p - 1) = '\0';
-    }
+    // Format: L: Bat% R: Bat%
+    int central = state->batteries[0].level;
+    int peripheral = (CONFIG_NICE_OLED_SPLIT_TOTAL_DEVICES > 1) ? state->batteries[1].level : 0;
+    
+    snprintf(text, sizeof(text), "L: %d%% R: %d%%", central, peripheral);
 
 #elif IS_ENABLED(CONFIG_NICE_OLED_WIDGET_CENTRAL_SHOW_BATTERY_PERIPHERAL_ONLY)
     // MODO 2: Muestra SÓLO las baterías de los periféricos
@@ -854,6 +847,18 @@ static struct zmk_widget_hid_indicators hid_indicators_widget;
  * Draw canvas
  **/
 
+static void draw_hid_indicators_status(lv_obj_t *canvas, const struct status_state *state) {
+    if (state->hid_indicators & 0x02) {
+        lv_draw_label_dsc_t label_dsc;
+#if IS_ENABLED(CONFIG_NICE_EPAPER_ON)
+        init_label_dsc(&label_dsc, LVGL_FOREGROUND, &pixel_operator_mono_16, LV_TEXT_ALIGN_CENTER);
+#else
+        init_label_dsc(&label_dsc, LVGL_FOREGROUND, &lv_font_unscii_8, LV_TEXT_ALIGN_CENTER);
+#endif
+        lv_canvas_draw_text(canvas, 0, 100, 68, &label_dsc, "CAPS");
+    }
+}
+
 static void draw_canvas(lv_obj_t *widget, lv_color_t cbuf[], const struct status_state *state) {
     lv_obj_t *canvas = lv_obj_get_child(widget, 0);
 
@@ -879,6 +884,8 @@ static void draw_canvas(lv_obj_t *widget, lv_color_t cbuf[], const struct status
 #if IS_ENABLED(CONFIG_NICE_OLED_WIDGET_LAYER)
     draw_layer_status(canvas, state);
 #endif
+
+    draw_hid_indicators_status(canvas, state);
 
 #ifdef CONFIG_NICE_OLED_WIDGET_RAW_HID
     draw_hid_status(canvas, state);
@@ -1078,6 +1085,33 @@ ZMK_SUBSCRIPTION(widget_output_status, zmk_ble_active_profile_changed);
 #endif
 
 /**
+ * HID Indicators status
+ **/
+
+struct hid_indicators_status_state {
+    uint8_t indicators;
+};
+
+static void set_hid_indicators_status(struct zmk_widget_screen *widget, struct hid_indicators_status_state state) {
+    widget->state.hid_indicators = state.indicators;
+    draw_canvas(widget->obj, widget->cbuf, &widget->state);
+}
+
+static void hid_indicators_status_update_cb(struct hid_indicators_status_state state) {
+    struct zmk_widget_screen *widget;
+    SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) { set_hid_indicators_status(widget, state); }
+}
+
+static struct hid_indicators_status_state hid_indicators_status_get_state(const zmk_event_t *eh) {
+    struct zmk_hid_indicators_changed *ev = as_zmk_hid_indicators_changed(eh);
+    return (struct hid_indicators_status_state){.indicators = ev->indicators};
+}
+
+ZMK_DISPLAY_WIDGET_LISTENER(widget_hid_indicators_status, struct hid_indicators_status_state,
+                            hid_indicators_status_update_cb, hid_indicators_status_get_state)
+ZMK_SUBSCRIPTION(widget_hid_indicators_status, zmk_hid_indicators_changed);
+
+/**
  * WPM status
  **/
 
@@ -1125,6 +1159,7 @@ int zmk_widget_screen_init(struct zmk_widget_screen *widget, lv_obj_t *parent) {
     widget_layer_status_init();
 #endif
     widget_output_status_init();
+    widget_hid_indicators_status_init();
 #if IS_ENABLED(CONFIG_NICE_OLED_WIDGET_WPM)
     widget_wpm_status_init();
 #endif // IS_ENABLED(CONFIG_NICE_OLED_WIDGET_WPM)
