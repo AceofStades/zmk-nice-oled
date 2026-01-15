@@ -1,0 +1,5 @@
+# Copyright (c) 2024 ZMK
+# SPDX-License-Identifier: MIT
+
+config SHIELD_NICE_PERI_VIEW
+	def_bool $(shields_list_contains,nice_peri_view)

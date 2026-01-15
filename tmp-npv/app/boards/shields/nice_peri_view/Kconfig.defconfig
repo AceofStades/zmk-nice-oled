@@ -1,0 +1,83 @@
+# Copyright (c) 2024 ZMK
+# SPDX-License-Identifier: MIT
+
+config NICE_PERI_VIEW_CUSTOM_DISPLAY
+    bool "use custom nice_peri_view display"
+    default true
+
+config NICE_PERI_VIEW_ROTATE_DISPLAY
+    bool "rotate the display by 180 degrees"
+    default n
+
+config NICE_PERI_VIEW_RIGHT_SIDE_CENTRAL
+        bool "right side central"
+        default n
+
+config NICE_PERI_VIEW_SHOW_SLEEP_ART_ON_IDLE
+        bool "whether the sleep art should be shown on idle"
+        default y
+
+config NICE_PERI_VIEW_SHOW_SLEEP_ART_ON_SLEEP
+        bool "whether the sleep art should be shown on idle"
+        default y
+
+if SHIELD_NICE_PERI_VIEW
+
+    config ZMK_DISPLAY
+        select LV_FONT_MONTSERRAT_28
+        select NICE_PERI_VIEW_CUSTOM_DISPLAY
+
+    choice ZMK_DISPLAY_STATUS_SCREEN
+        default ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+    endchoice
+
+endif #SHIELD_NICE_PERI_VIEW
+
+if NICE_PERI_VIEW_CUSTOM_DISPLAY
+
+    config NICE_PERI_VIEW_SCREEN_INVERTED
+        bool "invert nice_peri_view display color"
+
+    config ZMK_DISPLAY_BLANK_ON_IDLE
+         default n
+
+    choice ZMK_DISPLAY_STATUS_SCREEN
+        default ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+    endchoice
+
+    config ZMK_SPLIT_BLE_CENTRAL_BATTERY_LEVEL_FETCHING
+        default y
+
+    config ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
+        select LV_USE_LABEL
+        select LV_USE_IMG
+        select LV_USE_CANVAS
+        select LV_USE_ANIMIMG
+        select LV_USE_ANIMATION
+        select LV_USE_LINE
+        select LV_FONT_UNSCII_8
+    	select LV_FONT_MONTSERRAT_16
+    	select LV_FONT_MONTSERRAT_12
+        imply ZMK_HID_INDICATORS
+
+    choice ZMK_DISPLAY_WORK_QUEUE
+        default ZMK_DISPLAY_WORK_QUEUE_DEDICATED
+    endchoice
+
+    config LV_Z_MEM_POOL_SIZE
+        default 4096
+
+    config LV_Z_VDB_SIZE
+        default 100
+
+    config LV_DPI_DEF
+        default 161
+
+    config LV_Z_BITS_PER_PIXEL
+        default 1
+
+    choice LV_COLOR_DEPTH
+        default LV_COLOR_DEPTH_1
+    endchoice
+
+endif # NICE_PERI_VIEW_CUSTOM_DISPLAY
