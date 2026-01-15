@@ -41,8 +41,8 @@ void draw_battery_status(lv_obj_t *canvas, const struct status_state *state) {
     peripheral = state->batteries[1].level;
 #endif
 
-    snprintf(text_l, sizeof(text_l), "L: %d%%", central);
-    snprintf(text_r, sizeof(text_r), "R: %d%%", peripheral);
+    snprintf(text_r, sizeof(text_r), "R: %d%%", central);
+    snprintf(text_l, sizeof(text_l), "L: %d%%", peripheral);
 
     // Draw on two lines to ensure fit and centering
     lv_canvas_draw_text(canvas, 0, 19, 68, &label_dsc, text_l);
