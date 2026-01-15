@@ -28,6 +28,26 @@ static void draw_charging_level(lv_obj_t *canvas, const struct status_state *sta
 }
 
 void draw_battery_status(lv_obj_t *canvas, const struct status_state *state) {
+#if IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_CENTRAL_SHOW_BATTERY_PERIPHERAL_ALL)
+    lv_draw_label_dsc_t label_dsc;
+    init_label_dsc(&label_dsc, LVGL_FOREGROUND, &pixel_operator_mono, LV_TEXT_ALIGN_CENTER);
+
+    char text_l[16];
+    char text_r[16];
+    int central = state->batteries[0].level;
+    // Handle single peripheral for now (index 1)
+    int peripheral = 0;
+#if CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS > 0
+    peripheral = state->batteries[1].level;
+#endif
+
+    snprintf(text_l, sizeof(text_l), "L: %d%%", central);
+    snprintf(text_r, sizeof(text_r), "R: %d%%", peripheral);
+
+    // Draw on two lines to ensure fit and centering
+    lv_canvas_draw_text(canvas, 0, 19, 68, &label_dsc, text_l);
+    lv_canvas_draw_text(canvas, 0, 33, 68, &label_dsc, text_r); 
+#else
     lv_draw_label_dsc_t label_left_dsc;
     init_label_dsc(&label_left_dsc, LVGL_FOREGROUND, &pixel_operator_mono, LV_TEXT_ALIGN_LEFT);
     lv_canvas_draw_text(canvas, 0, 19, 25, &label_left_dsc, "BAT");
@@ -37,4 +57,5 @@ void draw_battery_status(lv_obj_t *canvas, const struct status_state *state) {
     } else {
         draw_level(canvas, state);
     }
+#endif
 }

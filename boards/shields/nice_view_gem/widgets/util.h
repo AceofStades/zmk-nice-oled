@@ -15,9 +15,20 @@
 #define LVGL_FOREGROUND                                                                            \
     IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_INVERTED) ? lv_color_white() : lv_color_black()
 
+#if IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_CENTRAL_SHOW_BATTERY_PERIPHERAL_ALL)
+struct battery_info {
+    uint8_t source;
+    uint8_t level;
+    bool usb_present;
+};
+#endif
+
 struct status_state {
     uint8_t battery;
     bool charging;
+#if IS_ENABLED(CONFIG_NICE_VIEW_WIDGET_CENTRAL_SHOW_BATTERY_PERIPHERAL_ALL)
+    struct battery_info batteries[CONFIG_ZMK_SPLIT_BLE_CENTRAL_PERIPHERALS + 1];
+#endif
 #if !IS_ENABLED(CONFIG_ZMK_SPLIT) || IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
     struct zmk_endpoint_instance selected_endpoint;
     int active_profile_index;
